@@ -54,6 +54,14 @@ docker compose exec app python -m app.cli create-admin
 
 A aplicação fica em `http://localhost:8000`. Os dados PostgreSQL e as imagens usam volumes nomeados. Para produção, use HTTPS atrás de proxy confiável, configure `COOKIE_SECURE=true`, `APP_ENV=production`, `CORS_ORIGINS` apenas com o domínio da loja e segredos exclusivos via gerenciador de segredos. Faça backup dos dois volumes. Não publique o banco nem o endpoint de administração diretamente na internet sem TLS e controles de rede.
 
+## Deploy no Vercel
+
+O arquivo `vercel.json` configura os serviços `backend` (FastAPI) e `frontend` (Vite) no mesmo projeto. As rotas `/api/*` e `/media/*` são encaminhadas ao backend; as demais rotas, incluindo as páginas do React Router, são encaminhadas ao frontend. O navegador chama `/api` no mesmo domínio, então não é necessário definir `VITE_API_URL` nem um binding entre esses serviços.
+
+Configure no ambiente do serviço backend as variáveis de produção necessárias, incluindo `DATABASE_URL` apontando para um PostgreSQL acessível pelo Vercel, `SECRET_KEY` exclusiva, `COOKIE_SECURE=true`, `APP_ENV=production` e `CORS_ORIGINS` com as origens reais da loja. Não use valores de desenvolvimento em produção.
+
+O armazenamento local de uploads (`UPLOAD_DIR`) não é persistente entre execuções serverless. Antes de usar uploads administrativos em produção, configure armazenamento de objetos persistente compatível e adapte o backend para gravar e servir imagens por esse armazenamento. O banco também precisa ser um serviço PostgreSQL externo; o Vercel não provisiona banco ou armazenamento com esta configuração.
+
 ## Demonstração
 
 `python -m app.cli seed-demo` insere três categorias e três produtos com **nomes, descrições e preços fictícios**, marcados como demonstração no banco e na loja. As imagens são referências ilustrativas remotas. Edite ou despublique/remova esses itens e envie imagens autorizadas antes de aceitar encomendas reais. O seed pode ser executado mais de uma vez sem duplicar os dados de exemplo.
