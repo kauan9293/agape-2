@@ -6,9 +6,16 @@ from PIL import Image
 from sqlalchemy import select
 
 from app import cli
-from app.config import settings
+from app.config import Settings, settings
 from app.models import Category, Product, ProductImage, ProductVariant, User, UserSession
 from app.security import hash_password, verify_password
+
+
+def test_vercel_upload_directory_uses_writable_tmp(monkeypatch):
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.delenv("UPLOAD_DIR", raising=False)
+
+    assert Settings(_env_file=None).upload_dir == "/tmp/uploads"
 
 
 def create_admin_account(client):
