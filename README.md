@@ -56,7 +56,7 @@ A aplicação fica em `http://localhost:8000`. Os dados PostgreSQL e as imagens 
 
 ## Deploy no Vercel
 
-O arquivo `vercel.json` configura os serviços `backend` (FastAPI) e `frontend` (Vite) no mesmo projeto. As rotas `/api/*` e `/media/*` são encaminhadas ao backend; as demais rotas, incluindo as páginas do React Router, são encaminhadas ao frontend. O navegador chama `/api` no mesmo domínio, então não é necessário definir `VITE_API_URL` nem um binding entre esses serviços.
+O arquivo `vercel.json` configura os serviços `backend` (FastAPI) e `frontend` (Vite) no mesmo projeto. As rotas `/api/*` e `/media/*` são encaminhadas ao backend; as demais rotas, incluindo as páginas do React Router, são encaminhadas ao frontend e reescritas para `index.html` dentro do serviço. O navegador chama `/api` no mesmo domínio, então não é necessário definir `VITE_API_URL` nem um binding entre esses serviços.
 
 Configure no ambiente do serviço backend as variáveis de produção necessárias, incluindo `DATABASE_URL` apontando para um PostgreSQL acessível pelo Vercel, `SECRET_KEY` exclusiva, `COOKIE_SECURE=true`, `APP_ENV=production` e `CORS_ORIGINS` com as origens reais da loja. Não use valores de desenvolvimento em produção.
 
