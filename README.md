@@ -60,6 +60,8 @@ O arquivo `vercel.json` configura os serviços `backend` (FastAPI) e `frontend` 
 
 Configure no ambiente do serviço backend as variáveis de produção necessárias, incluindo `DATABASE_URL` apontando para um PostgreSQL acessível pelo Vercel, `SECRET_KEY` exclusiva, `COOKIE_SECURE=true`, `APP_ENV=production` e `CORS_ORIGINS` com as origens reais da loja. Não use valores de desenvolvimento em produção.
 
+Antes de usar a aplicação, aplique as migrações no mesmo banco indicado por `DATABASE_URL`, executando `alembic upgrade head` dentro de `backend`. As tabelas não são criadas automaticamente pela função do Vercel; mantenha a URL e as credenciais fora do repositório.
+
 No Vercel, os uploads usam `/tmp/uploads`, que é gravável pela função mas temporário e não persistente entre execuções. Antes de usar uploads administrativos em produção, configure armazenamento de objetos persistente compatível e adapte o backend para gravar e servir imagens por esse armazenamento. O banco também precisa ser um serviço PostgreSQL externo; o Vercel não provisiona banco ou armazenamento com esta configuração.
 
 ## Demonstração
