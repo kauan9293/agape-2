@@ -18,6 +18,12 @@ def test_vercel_upload_directory_uses_writable_tmp(monkeypatch):
     assert Settings(_env_file=None).upload_dir == "/tmp/uploads"
 
 
+def test_postgres_urls_use_installed_psycopg_driver():
+    assert Settings(database_url="postgresql://user:pass@localhost/db", _env_file=None).database_url == "postgresql+psycopg://user:pass@localhost/db"
+    assert Settings(database_url="postgres://user:pass@localhost/db", _env_file=None).database_url == "postgresql+psycopg://user:pass@localhost/db"
+    assert Settings(database_url="postgresql+psycopg://user:pass@localhost/db", _env_file=None).database_url == "postgresql+psycopg://user:pass@localhost/db"
+
+
 def create_admin_account(client):
     with client.app.state.test_session_factory() as db:
         db.add(User(email="owner@example.com", password_hash=hash_password("a-very-long-test-password"), role="admin"))

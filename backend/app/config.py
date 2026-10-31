@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,6 +20,15 @@ class Settings(BaseSettings):
     minimum_order_notice_hours: int = 48
     upload_dir: str = Field(default_factory=lambda: "/tmp/uploads" if os.environ.get("VERCEL") == "1" else "./uploads")
     app_env: str = "development"
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def use_psycopg_driver(cls, value: str) -> str:
+        if isinstance(value, str):
+            for prefix in ("postgres://", "postgresql://"):
+                if value.startswith(prefix):
+                    return value.replace(prefix, "postgresql+psycopg://", 1)
+        return value
 
     @property
     def allowed_origins(self) -> list[str]:
