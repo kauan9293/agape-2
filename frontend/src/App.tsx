@@ -1,8 +1,8 @@
 import { FormEvent, useEffect, useState } from 'react'
-import { Link, NavLink, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowDownRight, ArrowLeft, ArrowRight, Check, ChevronDown, Instagram, LockKeyhole, Minus, Plus, Search, ShoppingBag, Sparkles, Trash2, Upload, X } from 'lucide-react'
-import { api, dateTime, money } from './api'
-import type { CartLine, Category, Order, Product } from './types'
+import { Link, NavLink, Route, Routes, useParams, useSearchParams } from 'react-router-dom'
+import { ArrowDownRight, ArrowLeft, ArrowRight, Check, ChevronDown, Instagram, Minus, Plus, Search, ShoppingBag, Sparkles, Trash2 } from 'lucide-react'
+import { api, money } from './api'
+import type { CartLine, Category, Product } from './types'
 
 const instagramUrl = 'https://www.instagram.com/confeitaria_agape_artesanal_/'
 const fallbackPhotos = [
@@ -37,10 +37,11 @@ function App() {
     <Route path="/produtos" element={<><SiteHeader count={cart.reduce((sum, line) => sum + line.quantity, 0)} /><CatalogPage /><SiteFooter /></>} />
     <Route path="/produto/:slug" element={<><SiteHeader count={cart.reduce((sum, line) => sum + line.quantity, 0)} /><ProductPage addToCart={addToCart} /><SiteFooter /></>} />
     <Route path="/carrinho" element={<><SiteHeader count={cart.reduce((sum, line) => sum + line.quantity, 0)} /><CartPage cart={cart} updateQuantity={updateQuantity} clearCart={() => setCart([])} /><SiteFooter /></>} />
-    <Route path="/admin/*" element={<AdminArea />} />
     <Route path="*" element={<><SiteHeader count={cart.length} /><main className="not-found"><p className="eyebrow">404 · Página não encontrada</p><h1>Essa página não está no nosso cardápio.</h1><Link className="button button-dark" to="/produtos">Ver produtos <ArrowRight size={16} /></Link></main><SiteFooter /></>} />
   </Routes>
 }
+
+export default App
 
 function SiteHeader({ count }: { count: number }) {
   return <header className="site-header">
@@ -147,106 +148,3 @@ function CartPage({ cart, updateQuantity, clearCart }: { cart: CartLine[]; updat
   if (!cart.length) return <main className="empty-state cart-empty"><ShoppingBag size={28} /><p className="eyebrow">Sua sacola</p><h1>Ainda está vazia.</h1><p>Escolha algo especial no nosso cardápio.</p><Link to="/produtos" className="button button-dark">Explorar cardápio <ArrowRight size={16} /></Link></main>
   return <main className="cart-page section-wrap"><div className="page-intro compact"><p className="eyebrow">Quase lá</p><h1>Sua <em>sacola.</em></h1></div><div className="cart-layout"><section className="cart-lines" aria-label="Itens na sacola">{cart.map((line) => { const variant = line.product.variants.find((item) => item.id === line.variantId); const unitPrice = Number(line.product.price) + Number(variant?.price_delta ?? 0); return <article className="cart-line" key={`${line.product.id}-${line.variantId ?? 'base'}`}><img src={photo(line.product)} alt="" /><div className="cart-line-info"><Link to={`/produto/${line.product.slug}`}>{line.product.name}</Link>{variant && <span>{variant.name}</span>}<span>{money(unitPrice)} cada</span></div><div className="quantity-control"><button aria-label={`Diminuir ${line.product.name}`} onClick={() => updateQuantity(line.product.id, line.variantId, line.quantity - 1)}><Minus size={15} /></button><span>{line.quantity}</span><button aria-label={`Aumentar ${line.product.name}`} onClick={() => updateQuantity(line.product.id, line.variantId, line.quantity + 1)}><Plus size={15} /></button></div><strong>{money(unitPrice * line.quantity)}</strong><button className="icon-button remove-line" aria-label={`Remover ${line.product.name}`} onClick={() => updateQuantity(line.product.id, line.variantId, 0)}><Trash2 size={17} /></button></article> })}<Link className="text-link continue-link" to="/produtos"><ArrowLeft size={15} /> Continuar escolhendo</Link></section><form className="checkout-form" onSubmit={submit}><div className="checkout-title"><h2>Seus dados</h2><span>Solicitação de encomenda</span></div><label className="form-field"><span>Nome</span><input required minLength={2} maxLength={160} value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" /></label><label className="form-field"><span>Celular / WhatsApp</span><input required minLength={8} maxLength={30} value={phone} onChange={(event) => setPhone(event.target.value)} autoComplete="tel" /></label><label className="form-field"><span>E-mail <small>opcional</small></span><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" /></label><label className="form-field"><span>Data e horário desejados · mínimo de {minimumNotice}h</span><input type="datetime-local" required min={minRequestedValue} value={requestedFor} onChange={(event) => setRequestedFor(event.target.value)} /></label><fieldset className="fulfillment-choice"><legend>Recebimento</legend><label><input type="radio" checked={fulfillment === 'pickup'} onChange={() => setFulfillment('pickup')} /> Retirada</label><label><input type="radio" checked={fulfillment === 'delivery'} onChange={() => setFulfillment('delivery')} /> Entrega</label></fieldset>{fulfillment === 'delivery' && <label className="form-field"><span>Endereço e observações</span><textarea required maxLength={500} value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} /></label>}{error && <p className="notice error">{error}</p>}<div className="checkout-total"><span>Subtotal</span><strong>{money(subtotal)}</strong></div><p className="checkout-disclaimer">O pedido fica pendente de confirmação. Valores e disponibilidade são conferidos pela confeitaria. Nenhum pagamento é processado aqui.</p><button className="button button-dark checkout-submit" disabled={busy}>{busy ? 'Enviando...' : 'Solicitar encomenda'} <ArrowRight size={16} /></button></form></div></main>
 }
-
-function AdminArea() {
-  const [user, setUser] = useState<{ email: string } | null>(null)
-  const [checked, setChecked] = useState(false)
-  const navigate = useNavigate()
-  useEffect(() => { api<{ email: string }>('/api/auth/me').then(setUser).catch(() => setUser(null)).finally(() => setChecked(true)) }, [])
-  if (!checked) return <main className="admin-loading">Verificando acesso...</main>
-  if (!user) return <AdminLogin onLogin={setUser} />
-  return <AdminDashboard user={user} onLogout={async () => { await api('/api/auth/logout', { method: 'POST' }).catch(() => undefined); setUser(null); navigate('/admin') }} />
-}
-
-function AdminLogin({ onLogin }: { onLogin: (user: { email: string }) => void }) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [busy, setBusy] = useState(false)
-  async function submit(event: FormEvent) {
-    event.preventDefault(); setError(''); setBusy(true)
-    try { const user = await api<{ email: string }>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }); onLogin(user) }
-    catch (reason) { setError(reason instanceof Error ? reason.message : 'Não foi possível entrar.') }
-    finally { setBusy(false) }
-  }
-  return <main className="admin-login"><Link className="brand" to="/"><span className="brand-mark">á</span><span className="brand-copy"><strong>Ágape</strong><small>PAINEL ADMINISTRATIVO</small></span></Link><form className="login-card" onSubmit={submit}><LockKeyhole size={22} /><p className="eyebrow">Acesso restrito</p><h1>Bem-vinda de volta.</h1><label className="form-field"><span>E-mail</span><input type="email" required autoComplete="username" value={email} onChange={(event) => setEmail(event.target.value)} /></label><label className="form-field"><span>Senha</span><input type="password" required autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>{error && <p className="notice error">{error}</p>}<button className="button button-dark" disabled={busy}>{busy ? 'Entrando...' : 'Entrar no painel'} <ArrowRight size={16} /></button><Link className="login-back" to="/">Voltar à loja</Link></form><span className="admin-footnote">Confeitaria Ágape Artesanal</span></main>
-}
-
-type DashboardStats = { products: number; available_products: number; unavailable_products: number; orders: number; pending_orders: number; paid_sales: string }
-type ProductPayload = { category_id: number; name: string; slug: string; description: string; price: string; is_available: boolean; is_published: boolean; is_featured: boolean; is_demo: boolean; stock: number | null; images: { url: string; alt_text: string }[]; variants: { name: string; price_delta: string; stock: number | null; is_available: boolean }[] }
-
-function AdminDashboard({ user, onLogout }: { user: { email: string }; onLogout: () => void }) {
-  const [section, setSection] = useState<'products' | 'orders'>('products')
-  const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [products, setProducts] = useState<Product[]>([])
-  const [orders, setOrders] = useState<Order[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [editor, setEditor] = useState<Product | 'new' | null>(null)
-  const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
-  const [busy, setBusy] = useState(false)
-  async function refresh() {
-    try {
-      const [dashboard, productItems, orderItems, categoryItems] = await Promise.all([api<DashboardStats>('/api/admin/dashboard'), api<Product[]>('/api/admin/products'), api<Order[]>('/api/admin/orders'), api<Category[]>('/api/admin/categories')])
-      setStats(dashboard); setProducts(productItems); setOrders(orderItems); setCategories(categoryItems); setError('')
-    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Falha ao carregar dados administrativos.') }
-  }
-  useEffect(() => { void refresh() }, [])
-  async function saveProduct(payload: ProductPayload, product: Product | 'new') {
-    setBusy(true); setError(''); setMessage('')
-    try {
-      await api(product === 'new' ? '/api/admin/products' : `/api/admin/products/${product.id}`, { method: product === 'new' ? 'POST' : 'PUT', body: JSON.stringify(payload) })
-      setEditor(null); setMessage('Produto salvo com sucesso.'); await refresh()
-    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Não foi possível salvar o produto.') }
-    finally { setBusy(false) }
-  }
-  async function archive(product: Product) {
-    if (!window.confirm(`Arquivar “${product.name}”? Ele deixará de aparecer na loja.`)) return
-    try { await api(`/api/admin/products/${product.id}/archive`, { method: 'POST' }); setMessage('Produto arquivado.'); await refresh() }
-    catch (reason) { setError(reason instanceof Error ? reason.message : 'Não foi possível arquivar o produto.') }
-  }
-  async function changeStatus(order: Order, status: string) {
-    try { await api(`/api/admin/orders/${order.id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }); setMessage(`Pedido ${order.public_code} atualizado.`); await refresh() }
-    catch (reason) { setError(reason instanceof Error ? reason.message : 'Não foi possível atualizar o pedido.') }
-  }
-  return <main className="admin-app"><header className="admin-header"><Link className="brand" to="/"><span className="brand-mark">á</span><span className="brand-copy"><strong>Ágape</strong><small>ADMINISTRAÇÃO</small></span></Link><div className="admin-user"><span>{user.email}</span><button onClick={onLogout}>Sair</button></div></header><div className="admin-body"><aside className="admin-sidebar"><p className="eyebrow">Loja</p><button className={section === 'products' ? 'selected' : ''} onClick={() => setSection('products')}><ShoppingBag size={17} /> Produtos</button><button className={section === 'orders' ? 'selected' : ''} onClick={() => setSection('orders')}><ArrowRight size={17} /> Pedidos</button><a href="/" target="_blank" rel="noreferrer">Abrir loja <ArrowDownRight size={16} /></a><div className="sidebar-foot">Dados da loja<br />Confeitaria Ágape</div></aside><section className="admin-content"><div className="admin-title"><div><p className="eyebrow">Visão geral</p><h1>{section === 'products' ? 'Produtos' : 'Pedidos'}</h1></div>{section === 'products' && <button className="button button-dark" onClick={() => setEditor('new')}><Plus size={17} /> Novo produto</button>}</div>{stats && <div className="stat-grid"><Stat label="Produtos" value={stats.products} /><Stat label="Disponíveis" value={stats.available_products} /><Stat label="Indisponíveis" value={stats.unavailable_products} /><Stat label="Pedidos pendentes" value={stats.pending_orders} /><Stat label="Vendas pagas" value={money(stats.paid_sales)} /></div>}{error && <p className="notice error">{error}</p>}{message && <p className="notice success">{message}</p>}{section === 'products' ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Disponibilidade</th><th>Publicado</th><th aria-label="Ações" /></tr></thead><tbody>{products.map((product) => <tr key={product.id}><td><div className="table-product"><img src={photo(product)} alt="" /><span>{product.name}</span></div></td><td>{product.category.name}</td><td>{money(product.price)}</td><td><span className={`status-pill ${product.is_available ? 'status-green' : 'status-muted'}`}>{product.is_available ? 'Disponível' : 'Indisponível'}</span></td><td>{product.is_published ? 'Publicado' : 'Rascunho'}</td><td><button className="table-action" onClick={() => setEditor(product)}>Editar</button><button className="table-action danger-text" onClick={() => void archive(product)}>Arquivar</button></td></tr>)}{!products.length && <tr><td colSpan={6}>Nenhum produto cadastrado. Crie o primeiro para começar.</td></tr>}</tbody></table></div> : <div className="order-list">{orders.map((order) => <article className="order-card" key={order.id}><div className="order-card-head"><div><strong>#{order.public_code}</strong><span>{dateTime(order.created_at)}</span></div><select aria-label={`Status do pedido ${order.public_code}`} value={order.status} onChange={(event) => void changeStatus(order, event.target.value)}>{['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled', 'paid'].map((value) => <option key={value} value={value}>{orderStatusLabel(value)}</option>)}</select></div><div className="order-customer"><strong>{order.customer.name}</strong><span>{order.customer.phone}{order.customer.email ? ` · ${order.customer.email}` : ''}</span><span>Data desejada: {dateTime(order.requested_for)}</span><span>{order.fulfillment === 'delivery' ? 'Entrega' : 'Retirada'}{order.delivery_notes ? ` · ${order.delivery_notes}` : ''}</span></div><ul>{order.items.map((item, index) => <li key={`${order.id}-${index}`}>{item.quantity} × {item.product_name}{item.variant_name ? ` (${item.variant_name})` : ''} <span>{money(Number(item.unit_price) * item.quantity)}</span></li>)}</ul><div className="order-total"><span>Total</span><strong>{money(order.total)}</strong></div>{order.history.length > 0 && <details className="order-history"><summary>Histórico de status</summary>{order.history.map((item, index) => <p key={`${order.id}-h${index}`}>{orderStatusLabel(item.old_status)} → {orderStatusLabel(item.new_status)} · {dateTime(item.created_at)}</p>)}</details>}</article>)}{!orders.length && <div className="empty-state"><h2>Nenhum pedido recebido</h2><p>Os pedidos registrados pela loja aparecerão aqui.</p></div>}</div>}</section></div>{editor && <ProductEditor product={editor} categories={categories} busy={busy} onClose={() => setEditor(null)} onSave={(payload) => void saveProduct(payload, editor)} />}</main>
-}
-
-function Stat({ label, value }: { label: string; value: string | number }) { return <div className="stat-item"><span>{label}</span><strong>{value}</strong></div> }
-
-function orderStatusLabel(status: string) { return ({ pending: 'Pendente', confirmed: 'Confirmado', preparing: 'Em preparo', ready: 'Pronto', completed: 'Concluído', cancelled: 'Cancelado', paid: 'Pago' } as Record<string, string>)[status] ?? status }
-
-function ProductEditor({ product, categories, busy, onClose, onSave }: { product: Product | 'new'; categories: Category[]; busy: boolean; onClose: () => void; onSave: (payload: ProductPayload) => void }) {
-  const [name, setName] = useState(product === 'new' ? '' : product.name)
-  const [slug, setSlug] = useState(product === 'new' ? '' : product.slug)
-  const [description, setDescription] = useState(product === 'new' ? '' : product.description)
-  const [price, setPrice] = useState(product === 'new' ? '' : product.price)
-  const [categoryId, setCategoryId] = useState(product === 'new' ? (categories[0]?.id ?? 0) : product.category_id)
-  const [available, setAvailable] = useState(product === 'new' || product.is_available)
-  const [published, setPublished] = useState(product !== 'new' && product.is_published)
-  const [featured, setFeatured] = useState(product !== 'new' && product.is_featured)
-  const [demo, setDemo] = useState(product !== 'new' && product.is_demo)
-  const [stock, setStock] = useState(product === 'new' || product.stock === null ? '' : String(product.stock))
-  const [imageUrls, setImageUrls] = useState(product === 'new' ? '' : product.images.map((image) => image.url).join('\n'))
-  const [variants, setVariants] = useState(product === 'new' ? '' : product.variants.map((variant) => `${variant.name}|${variant.price_delta}|${variant.stock ?? ''}`).join('\n'))
-  const [uploadError, setUploadError] = useState('')
-  const [uploading, setUploading] = useState(false)
-  const [previewing, setPreviewing] = useState(false)
-  function setProductName(value: string) { setName(value); if (product === 'new') setSlug(value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')) }
-  async function upload(file?: File) {
-    if (!file) return
-    setUploading(true); setUploadError('')
-    try { const data = new FormData(); data.append('file', file); const result = await api<{ url: string }>('/api/admin/uploads', { method: 'POST', body: data }); setImageUrls((previous) => [previous, result.url].filter(Boolean).join('\n')) }
-    catch (error) { setUploadError(error instanceof Error ? error.message : 'Upload falhou.') }
-    finally { setUploading(false) }
-  }
-  function submit(event: FormEvent) {
-    event.preventDefault()
-    const imageItems = imageUrls.split('\n').map((url) => url.trim()).filter(Boolean).map((url) => ({ url, alt_text: name }))
-    const variantItems = variants.split('\n').map((line) => line.split('|')).filter((parts) => parts[0]?.trim()).map(([variantName, delta = '0', quantity = '']) => ({ name: variantName.trim(), price_delta: delta.trim() || '0', stock: quantity.trim() ? Number(quantity) : null, is_available: true }))
-    onSave({ category_id: Number(categoryId), name, slug, description, price, is_available: available, is_published: published, is_featured: featured, is_demo: demo, stock: stock === '' ? null : Number(stock), images: imageItems, variants: variantItems })
-  }
-  return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}><section className="product-editor" role="dialog" aria-modal="true" aria-labelledby="editor-title"><header><div><p className="eyebrow">Catálogo</p><h2 id="editor-title">{product === 'new' ? 'Novo produto' : 'Editar produto'}</h2></div><button className="icon-button" onClick={onClose} aria-label="Fechar"><X size={19} /></button></header><form onSubmit={submit}><div className="editor-fields"><label className="form-field"><span>Nome</span><input required minLength={2} maxLength={180} value={name} onChange={(event) => setProductName(event.target.value)} /></label><label className="form-field"><span>Endereço do produto</span><input required pattern="[a-z0-9]+(-[a-z0-9]+)*" value={slug} onChange={(event) => setSlug(event.target.value)} /></label><label className="form-field"><span>Categoria</span><select required value={categoryId} onChange={(event) => setCategoryId(Number(event.target.value))}>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label><label className="form-field"><span>Preço (R$)</span><input required type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} /></label><label className="form-field editor-wide"><span>Descrição</span><textarea required minLength={2} maxLength={5000} rows={4} value={description} onChange={(event) => setDescription(event.target.value)} /></label><label className="form-field"><span>Estoque <small>vazio = sem limite definido</small></span><input type="number" min="0" step="1" value={stock} onChange={(event) => setStock(event.target.value)} /></label><label className="form-field editor-wide"><span>Imagens</span><textarea rows={2} value={imageUrls} onChange={(event) => setImageUrls(event.target.value)} placeholder="Uma URL por linha" /><span className="upload-control"><label><Upload size={15} /> {uploading ? 'Enviando...' : 'Enviar imagem'}<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void upload(event.target.files?.[0])} /></label><small>JPG, PNG ou WebP · até 8 MB</small></span>{uploadError && <small className="danger-text">{uploadError}</small>}</label><label className="form-field editor-wide"><span>Variações <small>uma por linha: nome | adicional em R$ | estoque</small></span><textarea rows={3} value={variants} onChange={(event) => setVariants(event.target.value)} placeholder={'Pequeno | 0 | 5\nGrande | 12.00 | 3'} /></label></div><div className="toggle-row"><label><input type="checkbox" checked={available} onChange={(event) => setAvailable(event.target.checked)} /> Disponível</label><label><input type="checkbox" checked={published} onChange={(event) => setPublished(event.target.checked)} /> Publicar</label><label><input type="checkbox" checked={featured} onChange={(event) => setFeatured(event.target.checked)} /> Destaque</label><label><input type="checkbox" checked={demo} onChange={(event) => setDemo(event.target.checked)} /> Dados de demonstração</label></div><footer><button type="button" className="button button-outline" onClick={onClose}>Cancelar</button><button type="button" className="button button-outline" onClick={() => setPreviewing(true)}>Pré-visualizar</button><button className="button button-dark" disabled={busy || uploading}>{busy ? 'Salvando...' : 'Salvar produto'} <Check size={16} /></button></footer></form></section>{previewing && <div className="preview-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPreviewing(false) }}><section className="preview-panel" role="dialog" aria-modal="true" aria-label="Prévia do produto"><button className="icon-button preview-close" onClick={() => setPreviewing(false)} aria-label="Fechar prévia"><X size={18} /></button><img src={imageUrls.split('\n').map((url) => url.trim()).find(Boolean) || fallbackPhotos[0]} alt={name || 'Prévia do produto'} /><div><p className="product-category">{categories.find((category) => category.id === Number(categoryId))?.name || 'Categoria'}</p><h2>{name || 'Nome do produto'}</h2><p>{description || 'A descrição do produto aparecerá aqui.'}</p><strong>{price ? money(price) : 'Preço'}</strong></div></section></div>}</div>
-}
-
-export default App

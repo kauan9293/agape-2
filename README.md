@@ -1,6 +1,6 @@
 # Confeitaria Ágape Artesanal
 
-Loja responsiva em português com catálogo, encomendas, API FastAPI, PostgreSQL, painel administrativo autenticado e armazenamento persistente de imagens.
+Loja responsiva em português com catálogo, encomendas, API FastAPI, PostgreSQL e armazenamento persistente de imagens.
 
 ## Arquitetura
 
@@ -24,7 +24,6 @@ python -m pip install -r requirements.txt
 $env:DATABASE_URL = "sqlite:///./agape.db"
 alembic upgrade head
 python -m app.cli seed-demo
-python -m app.cli create-admin
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -36,11 +35,7 @@ npm install
 npm run dev
 ```
 
-A loja fica em `http://localhost:5173`, o painel em `/admin` e a documentação interativa da API em `http://localhost:8000/docs`. O proxy do Vite encaminha `/api` e `/media` ao backend.
-
-Para criar o administrador, informe o e-mail no terminal e digite uma senha com pelo menos 12 caracteres quando solicitado. A senha é lida sem eco, armazenada com Argon2 e nunca fica no código ou no navegador. Crie a conta só depois de aplicar as migrações. Não há credencial padrão.
-
-Se esquecer a senha, execute `py -3 -m app.cli reset-admin-password` dentro de `backend`, informe o e-mail da conta e cadastre uma nova senha. As sessões anteriores serão encerradas.
+A loja fica em `http://localhost:5173` e a documentação interativa da API em `http://localhost:8000/docs`. O proxy do Vite encaminha `/api` e `/media` ao backend.
 
 ## PostgreSQL com Docker
 
@@ -49,7 +44,6 @@ Copie `.env.example` para `.env`, troque `POSTGRES_PASSWORD` por uma senha exclu
 ```powershell
 docker compose up --build -d
 docker compose exec app python -m app.cli seed-demo
-docker compose exec app python -m app.cli create-admin
 ```
 
 A aplicação fica em `http://localhost:8000`. Os dados PostgreSQL e as imagens usam volumes nomeados. Para produção, use HTTPS atrás de proxy confiável, configure `COOKIE_SECURE=true`, `APP_ENV=production`, `CORS_ORIGINS` apenas com o domínio da loja e segredos exclusivos via gerenciador de segredos. Faça backup dos dois volumes. Não publique o banco nem o endpoint de administração diretamente na internet sem TLS e controles de rede.
@@ -62,9 +56,9 @@ Configure no ambiente do serviço backend as variáveis de produção necessári
 
 URLs PostgreSQL padrão como `postgresql://` ou `postgres://` são adaptadas automaticamente ao driver psycopg 3 usado pelo projeto.
 
-Antes de usar a aplicação, aplique as migrações no mesmo banco indicado por `DATABASE_URL`, executando `alembic upgrade head` dentro de `backend`. As tabelas não são criadas automaticamente pela função do Vercel. Depois, crie a conta administrativa nesse banco com `python -m app.cli create-admin`; não existe senha padrão. Mantenha a URL e as credenciais fora do repositório.
+Antes de usar a aplicação, aplique as migrações no mesmo banco indicado por `DATABASE_URL`, executando `alembic upgrade head` dentro de `backend`. As tabelas não são criadas automaticamente pela função do Vercel. Mantenha a URL e as credenciais fora do repositório.
 
-No Vercel, os uploads usam `/tmp/uploads`, que é gravável pela função mas temporário e não persistente entre execuções. Antes de usar uploads administrativos em produção, configure armazenamento de objetos persistente compatível e adapte o backend para gravar e servir imagens por esse armazenamento. O banco também precisa ser um serviço PostgreSQL externo; o Vercel não provisiona banco ou armazenamento com esta configuração.
+No Vercel, os uploads usam `/tmp/uploads`, que é gravável pela função mas temporário e não persistente entre execuções. O backend mantém endpoints de administração protegidos, mas o site não oferece painel administrativo. O banco também precisa ser um serviço PostgreSQL externo; o Vercel não provisiona banco ou armazenamento com esta configuração.
 
 ## Demonstração
 
