@@ -1,16 +1,18 @@
 :root {
   font-family: 'DM Sans', sans-serif;
-  color: #492b25;
-  background: #fffbf7;
+  color: #422b25;
+  background: #fbf7ef;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --cream: #fffbf7;
-  --cream-deep: #f4e9df;
-  --chocolate: #492b25;
-  --wine: #873d42;
-  --rose: #b85d72;
-  --ink-soft: #755d54;
-  --line: #e7d9cf;
+  --cream: #fbf7ef;
+  --cream-deep: #efe3d5;
+  --chocolate: #422b25;
+  --wine: #872b39;
+  --rose: #b5545e;
+  --pine: #1f3b31;
+  --gold: #c1a66e;
+  --ink-soft: #70584e;
+  --line: #e3d6c6;
   --white: #fff;
   --serif: 'Playfair Display', Georgia, serif;
 }
@@ -298,6 +300,74 @@ input[type='radio'], input[type='checkbox'] { accent-color: var(--wine); }
 .preview-panel > div > strong { font: 500 20px var(--serif); }
 .preview-close { position: absolute; top: 9px; right: 9px; z-index: 1; color: var(--chocolate); background: var(--cream); }
 
+.holiday-ribbon { min-height: 34px; padding: 6px 16px; display: flex; justify-content: center; align-items: center; gap: 10px; color: #fff3df; background: #a51f31; border-bottom: 1px solid #d5b875; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+.holiday-ribbon svg { color: var(--gold); }
+.site-header { background: #fbf7ef; border-bottom-color: rgba(154,38,53,.22); }
+.site-header .brand-mark { box-shadow: 0 0 0 1px var(--gold), 0 0 0 4px #fbf7ef, 0 0 0 5px rgba(193,166,110,.65); }
+.site-header .brand-mark { position: relative; }
+.site-header .brand-mark::before { content: ''; width: 34px; height: 12px; position: absolute; top: -7px; left: 1px; border-top: 2px solid #315b43; border-radius: 50%; background: radial-gradient(circle at 7px 0, #b83a45 0 2px, transparent 3px), radial-gradient(circle at 27px 0, #d5b875 0 2px, transparent 3px); transform: rotate(-7deg); pointer-events: none; }
+.site-header .brand-mark::after { content: '✦'; position: absolute; top: -7px; right: -8px; color: #b99550; font: 9px var(--serif); pointer-events: none; }
+.hero { min-height: 620px; grid-template-columns: 1.02fr .98fr; background: #f3eadc; }
+.hero-copy { padding: 106px 7% 92px 12%; }
+.hero-copy > .eyebrow { color: var(--wine); }
+.hero h1 { color: var(--chocolate); font-size: clamp(48px, 4.8vw, 66px); }
+.hero h1 em { color: var(--wine); }
+.hero .button-dark { color: #fff8ef; background: var(--wine); }
+.hero .button-dark:hover:not(:disabled) { color: #fff8ec; background: #6f202d; border-color: #d3b675; }
+.hero .text-link { color: var(--wine); }
+.hero-note { color: var(--ink-soft); }
+.hero-visual { min-height: 620px; background: #6a3d32; }
+.hero-visual::before { content: ''; height: 66px; position: absolute; z-index: 2; top: 0; right: 0; left: 0; background: radial-gradient(circle at 16px 13px, #e4c77e 0 2px, transparent 3px), radial-gradient(circle at 67px 17px, #a9494c 0 2px, transparent 3px), radial-gradient(circle at 116px 12px, #d6bd82 0 2px, transparent 3px), radial-gradient(circle at 166px 17px, #a9494c 0 2px, transparent 3px), radial-gradient(circle at 216px 12px, #e4c77e 0 2px, transparent 3px), linear-gradient(174deg, transparent 0 19px, rgba(36,47,37,.62) 20px 21px, transparent 22px); background-size: 250px 40px, 250px 40px, 250px 40px, 250px 40px, 250px 40px, 250px 42px; background-repeat: repeat-x; filter: drop-shadow(0 0 5px rgba(238,211,144,.48)); animation: light-glow 3.8s ease-in-out infinite alternate; pointer-events: none; }
+.hero-visual::after { background: linear-gradient(90deg, rgba(31,30,22,.12), transparent 25%, rgba(31,30,22,.16)); }
+.hero-visual > img { object-position: center 54%; }
+.hero-stamp { color: #f8edda; background: var(--wine); border-color: rgba(232,208,158,.74); outline-color: var(--gold); }
+.hero-stamp strong { font-size: 17px; }
+.hero-ornament { width: 21px; height: 27px; position: absolute; z-index: 2; top: 72px; border: 1px solid rgba(238,216,169,.8); border-radius: 50%; background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.7), transparent 25%), linear-gradient(135deg, #b55c50, #762c35 68%); box-shadow: 0 5px 12px rgba(31,20,16,.22); }
+.hero-ornament::before { content: ''; width: 5px; height: 9px; position: absolute; left: 7px; top: -8px; border: 1px solid var(--gold); border-bottom: 0; }
+.ornament-one { left: 18%; }
+.ornament-two { left: 31%; top: 86px; width: 16px; height: 21px; background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.75), transparent 25%), linear-gradient(135deg, #d3b86e, #9d7740 68%); }
+.hero-index { color: var(--pine); }
+.hero-index span, .note-line { background: var(--gold); }
+.featured { position: relative; }
+.featured .section-heading .eyebrow { color: var(--pine); }
+.product-image { background: #e6d7c6; }
+.product-image::after { content: ''; position: absolute; inset: 7px; border: 1px solid rgba(248,239,222,.58); pointer-events: none; }
+.category-band { color: #f7efe0; background: var(--pine); }
+.category-band .eyebrow, .category-num { color: #d3b879; }
+.category-band h2 em { color: #e3c88a; }
+.category-aside { color: #d3cbbb; }
+.category-list { border-color: rgba(234,222,194,.23); }
+.category-list a { border-color: rgba(234,222,194,.23); }
+.category-list a:hover { color: #e6cb8e; }
+.story-image::before { border-color: var(--gold); }
+.story-image > span { background: var(--pine); }
+.story-copy .eyebrow { color: var(--pine); }
+.christmas-message { min-height: 385px; padding: 76px 24px 70px; position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; color: #f7efe2; background: #294438; text-align: center; }
+.christmas-message::before, .christmas-message::after { content: ''; width: 210px; height: 210px; position: absolute; border: 1px solid rgba(193,166,110,.24); border-radius: 50%; }
+.christmas-message::before { top: -126px; left: -70px; box-shadow: 0 0 0 14px rgba(193,166,110,.04), 0 0 0 30px rgba(193,166,110,.035); }
+.christmas-message::after { right: -80px; bottom: -148px; box-shadow: 0 0 0 14px rgba(193,166,110,.04), 0 0 0 30px rgba(193,166,110,.035); }
+.christmas-message .eyebrow { z-index: 1; justify-content: center; color: #ddc78d; }
+.christmas-message h2 { margin: 0 0 17px; z-index: 1; font: 500 clamp(31px, 4vw, 45px)/1.2 var(--serif); }
+.christmas-message h2 em { color: #ddc78d; }
+.christmas-message > p:not(.eyebrow) { max-width: 470px; margin: 0; z-index: 1; color: #d9d4c8; font-size: 12px; line-height: 1.9; }
+.message-signature { margin-top: 21px; z-index: 1; color: #e4d3a7; font: italic 17px var(--serif); }
+.message-star { margin-bottom: 9px; color: var(--gold); font-size: 25px; line-height: 1; }
+.closing-band { position: relative; overflow: hidden; background: var(--wine); }
+.closing-band::before { content: '✳'; position: absolute; top: -90px; right: 7%; color: rgba(231,208,160,.12); font-size: 270px; line-height: 1; transform: rotate(12deg); }
+.closing-band .section-wrap { position: relative; z-index: 1; }
+.closing-band .eyebrow { color: #e2cb98; }
+.closing-band h2 em { color: #eed9ac; }
+.closing-copy { max-width: 390px; margin: -10px auto 23px; color: #f0dfd5; font-size: 12px; line-height: 1.7; }
+.button-cream { color: var(--pine); }
+.button-cream:hover:not(:disabled) { background: #e9d8b3; }
+.site-footer { background: #172f27; }
+.footer-greeting { min-height: 40px; margin-bottom: 30px; display: flex; justify-content: center; align-items: center; gap: 11px; border-bottom: 1px solid rgba(230,216,180,.2); color: #e1cc96; font: italic 15px var(--serif); }
+.footer-greeting svg { color: var(--gold); }
+.footer-links .eyebrow { color: #d2b778; }
+.footer-bottom { border-top-color: rgba(230,216,180,.18); }
+
+@keyframes light-glow { from { opacity: .76; } to { opacity: 1; } }
+
 @keyframes rise-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes soft-focus { from { opacity: .75; transform: scale(1.025); } to { opacity: 1; transform: scale(1); } }
 
@@ -317,9 +387,13 @@ input[type='radio'], input[type='checkbox'] { accent-color: var(--wine); }
   .stat-item:nth-child(n+4) { border-top: 1px solid var(--line); }
 }
 @media (max-width: 640px) {
+  .holiday-ribbon { min-height: 30px; gap: 7px; font-size: 8px; letter-spacing: 1.1px; }
+  .holiday-ribbon svg { width: 10px; }
   .site-header { height: 68px; padding-inline: 18px; gap: 10px; }
   .brand { gap: 7px; }
   .brand-mark { width: 31px; height: 31px; font-size: 22px; }
+  .site-header .brand-mark::before { width: 29px; }
+  .site-header .brand-mark::after { right: -7px; }
   .brand-copy strong { font-size: 19px; }
   .brand-copy small { font-size: 6.5px; letter-spacing: 1px; }
   .main-nav { gap: 0; }
@@ -329,16 +403,19 @@ input[type='radio'], input[type='checkbox'] { accent-color: var(--wine); }
   .cart-link svg { width: 20px; }
   .cart-count { font-size: 9px; }
   .hero { display: flex; flex-direction: column; }
-  .hero-copy { padding: 54px 7% 34px; }
-  .hero h1 { font-size: 47px; }
+  .hero-copy { padding: 48px 7% 32px; }
+  .hero h1 { font-size: 46px; }
   .hero-intro { max-width: 330px; margin-block: 17px 23px; font-size: 12px; }
   .hero-actions { gap: 17px; }
   .hero-actions .button { padding-inline: 13px; font-size: 10px; }
   .hero-actions .text-link { font-size: 10px; }
   .hero-note { margin-top: 29px; font-size: 9px; }
   .hero-visual { min-height: 330px; height: 330px; }
+  .hero-visual::before { height: 48px; background-size: 210px 36px, 210px 36px, 210px 36px, 210px 36px, 210px 36px, 210px 38px; }
   .hero-stamp { width: 88px; height: 88px; top: 20px; right: 25px; }
   .hero-stamp strong { font-size: 16px; }
+  .hero-ornament { top: 53px; left: 25%; transform: scale(.8); }
+  .ornament-two { top: 61px; left: 39%; }
   .hero-index { display: none; }
   .section-wrap { width: 88%; }
   .featured { padding-block: 62px 67px; }
@@ -361,7 +438,12 @@ input[type='radio'], input[type='checkbox'] { accent-color: var(--wine); }
   .story-copy > p:not(.eyebrow) { font-size: 11px; }
   .closing-band { padding-block: 51px; }
   .closing-band h2 { font-size: 34px; }
+  .closing-copy { max-width: 310px; margin-top: -7px; font-size: 11px; }
+  .christmas-message { min-height: 350px; padding: 62px 8%; }
+  .christmas-message h2 { font-size: 32px; }
+  .christmas-message > p:not(.eyebrow) { font-size: 11px; }
   .site-footer { padding: 39px 6% 0; }
+  .footer-greeting { min-height: 38px; margin-bottom: 25px; font-size: 13px; }
   .footer-main { grid-template-columns: 1fr 1fr; gap: 28px 16px; padding-bottom: 30px; }
   .footer-main > div:first-child { grid-column: 1 / -1; }
   .footer-bottom { min-height: 55px; align-items: flex-start; flex-direction: column; justify-content: center; gap: 5px; font-size: 8px; }

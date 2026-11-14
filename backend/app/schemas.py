@@ -84,6 +84,12 @@ class LoginInput(BaseModel):
     password: str = Field(min_length=1, max_length=200)
 
 
+class AdminSetupInput(BaseModel):
+    setup_token: str = Field(min_length=32, max_length=200, pattern=r"^[A-Za-z0-9_-]+$")
+    email: EmailStr
+    password: str = Field(min_length=12, max_length=200)
+
+
 class UserOut(ORMModel):
     id: int
     email: EmailStr

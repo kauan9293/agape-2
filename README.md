@@ -1,6 +1,6 @@
 # Confeitaria Ágape Artesanal
 
-Loja responsiva em português com catálogo, encomendas, API FastAPI, PostgreSQL e armazenamento persistente de imagens.
+Loja responsiva em português com catálogo, encomendas, API FastAPI, PostgreSQL, painel administrativo autenticado e armazenamento persistente de imagens.
 
 ## Arquitetura
 
@@ -22,8 +22,8 @@ py -3 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 $env:DATABASE_URL = "sqlite:///./agape.db"
+$env:ADMIN_SETUP_TOKEN = py -3 -c "import secrets; print(secrets.token_urlsafe(48))"
 alembic upgrade head
-python -m app.cli seed-demo
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -35,11 +35,15 @@ npm install
 npm run dev
 ```
 
-A loja fica em `http://localhost:5173` e a documentação interativa da API em `http://localhost:8000/docs`. O proxy do Vite encaminha `/api` e `/media` ao backend.
+A loja fica em `http://localhost:5173`, o painel em `/admin` e a documentação interativa da API em `http://localhost:8000/docs`. O proxy do Vite encaminha `/api` e `/media` ao backend.
+
+Na primeira visita a `/admin`, informe o código aleatório exibido no terminal e escolha o e-mail e uma senha de pelo menos 12 caracteres. O cadastro inicial fecha depois que a primeira conta administrativa é criada. Não há login ou senha de teste embutidos. Apague `ADMIN_SETUP_TOKEN` do ambiente após a configuração. Como alternativa, `python -m app.cli create-admin` cria a primeira conta pelo terminal.
+
+Se esquecer a senha, execute `py -3 -m app.cli reset-admin-password` dentro de `backend`, informe o e-mail da conta e cadastre uma nova senha. As sessões anteriores serão encerradas.
 
 ## PostgreSQL com Docker
 
-Copie `.env.example` para `.env`, troque `POSTGRES_PASSWORD` por uma senha exclusiva e confira `DATABASE_URL`/`CORS_ORIGINS`. Depois, na raiz:
+Copie `.env.example` para `.env`, defina valores exclusivos para `POSTGRES_PASSWORD` e `ADMIN_SETUP_TOKEN` (gere o token com `py -3 -c "import secrets; print(secrets.token_urlsafe(48))"`) e confira `CORS_ORIGINS`. Depois, na raiz:
 
 ```powershell
 docker compose up --build -d
@@ -48,17 +52,7 @@ docker compose exec app python -m app.cli seed-demo
 
 A aplicação fica em `http://localhost:8000`. Os dados PostgreSQL e as imagens usam volumes nomeados. Para produção, use HTTPS atrás de proxy confiável, configure `COOKIE_SECURE=true`, `APP_ENV=production`, `CORS_ORIGINS` apenas com o domínio da loja e segredos exclusivos via gerenciador de segredos. Faça backup dos dois volumes. Não publique o banco nem o endpoint de administração diretamente na internet sem TLS e controles de rede.
 
-## Deploy no Vercel
-
-O arquivo `vercel.json` configura os serviços `backend` (FastAPI) e `frontend` (Vite) no mesmo projeto. As rotas `/api/*` e `/media/*` são encaminhadas ao backend; as demais rotas, incluindo as páginas do React Router, são encaminhadas ao frontend e reescritas para `index.html` dentro do serviço. O navegador chama `/api` no mesmo domínio, então não é necessário definir `VITE_API_URL` nem um binding entre esses serviços.
-
-Configure no ambiente do serviço backend as variáveis de produção necessárias, incluindo `DATABASE_URL` apontando para um PostgreSQL acessível pelo Vercel, `SECRET_KEY` exclusiva, `COOKIE_SECURE=true`, `APP_ENV=production` e `CORS_ORIGINS` com as origens reais da loja. Não use valores de desenvolvimento em produção.
-
-URLs PostgreSQL padrão como `postgresql://` ou `postgres://` são adaptadas automaticamente ao driver psycopg 3 usado pelo projeto.
-
-Antes de usar a aplicação, aplique as migrações no mesmo banco indicado por `DATABASE_URL`, executando `alembic upgrade head` dentro de `backend`. As tabelas não são criadas automaticamente pela função do Vercel. Mantenha a URL e as credenciais fora do repositório.
-
-No Vercel, os uploads usam `/tmp/uploads`, que é gravável pela função mas temporário e não persistente entre execuções. O backend mantém endpoints de administração protegidos, mas o site não oferece painel administrativo. O banco também precisa ser um serviço PostgreSQL externo; o Vercel não provisiona banco ou armazenamento com esta configuração.
+Com `ADMIN_SETUP_TOKEN` configurado e sem executar `create-admin`, abra `/admin` para criar a conta inicial. O comando `docker compose exec app python -m app.cli create-admin` continua disponível como alternativa; nesse caso, o login normal será exibido.
 
 ## Demonstração
 

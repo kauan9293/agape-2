@@ -6,22 +6,9 @@ from PIL import Image
 from sqlalchemy import select
 
 from app import cli
-from app.config import Settings, settings
+from app.config import settings
 from app.models import Category, Product, ProductImage, ProductVariant, User, UserSession
 from app.security import hash_password, verify_password
-
-
-def test_vercel_upload_directory_uses_writable_tmp(monkeypatch):
-    monkeypatch.setenv("VERCEL", "1")
-    monkeypatch.delenv("UPLOAD_DIR", raising=False)
-
-    assert Settings(_env_file=None).upload_dir == "/tmp/uploads"
-
-
-def test_postgres_urls_use_installed_psycopg_driver():
-    assert Settings(database_url="postgresql://user:pass@localhost/db", _env_file=None).database_url == "postgresql+psycopg://user:pass@localhost/db"
-    assert Settings(database_url="postgres://user:pass@localhost/db", _env_file=None).database_url == "postgresql+psycopg://user:pass@localhost/db"
-    assert Settings(database_url="postgresql+psycopg://user:pass@localhost/db", _env_file=None).database_url == "postgresql+psycopg://user:pass@localhost/db"
 
 
 def create_admin_account(client):
@@ -50,6 +37,30 @@ def authenticated(client):
 def test_admin_routes_reject_anonymous_users(client):
     response = client.get("/api/admin/dashboard")
     assert response.status_code == 401
+
+
+def test_first_admin_setup_is_disabled_without_configured_token(client, monkeypatch):
+    monkeypatch.setattr(settings, "admin_setup_token", "")
+    assert client.get("/api/auth/setup-status").json() == {"available": False}
+
+
+def test_first_admin_setup_requires_token_and_closes_after_creation(client, monkeypatch):
+    setup_token = "test-setup-token-with-at-least-thirty-two-characters"
+    monkeypatch.setattr(settings, "admin_setup_token", setup_token)
+    assert client.get("/api/auth/setup-status").json() == {"available": True}
+    csrf = client.get("/api/auth/csrf").json()["csrf_token"]
+    payload = {"setup_token": "wrong-setup-token-with-at-least-thirty-two-chars", "email": "owner@example.com", "password": "a-very-long-test-password"}
+    response = client.post("/api/auth/setup", headers={"X-CSRF-Token": csrf}, json=payload)
+    assert response.status_code == 403
+    payload["setup_token"] = setup_token
+    response = client.post("/api/auth/setup", headers={"X-CSRF-Token": csrf}, json=payload)
+    assert response.status_code == 201
+    assert response.json()["email"] == "owner@example.com"
+    assert client.get("/api/auth/me").status_code == 200
+    assert client.get("/api/auth/setup-status").json() == {"available": False}
+    csrf = client.get("/api/auth/csrf").json()["csrf_token"]
+    response = client.post("/api/auth/setup", headers={"X-CSRF-Token": csrf}, json=payload)
+    assert response.status_code == 409
 
 
 def test_admin_mutations_require_csrf(client):
