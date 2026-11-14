@@ -54,6 +54,12 @@ A aplicação fica em `http://localhost:8000`. Os dados PostgreSQL e as imagens 
 
 Com `ADMIN_SETUP_TOKEN` configurado e sem executar `create-admin`, abra `/admin` para criar a conta inicial. O comando `docker compose exec app python -m app.cli create-admin` continua disponível como alternativa; nesse caso, o login normal será exibido.
 
+## Deploy na Vercel
+
+O `vercel.json` declara os serviços `backend` (FastAPI) e `frontend` (Vite) no mesmo projeto. As rotas `/api/*` e `/media/*` vão para o backend; as demais rotas vão para o frontend, incluindo o painel `/admin`.
+
+Mantenha o Root Directory do projeto na raiz do repositório e configure no ambiente do backend `DATABASE_URL`, `SECRET_KEY`, `ADMIN_SETUP_TOKEN`, `COOKIE_SECURE=true`, `APP_ENV=production` e `CORS_ORIGINS` com as origens reais da loja. Use PostgreSQL externo e armazenamento persistente de objetos para imagens: o sistema de arquivos das funções Vercel não é armazenamento durável. Não publique segredos no repositório.
+
 ## Demonstração
 
 `python -m app.cli seed-demo` insere três categorias e três produtos com **nomes, descrições e preços fictícios**, marcados como demonstração no banco e na loja. As imagens são referências ilustrativas remotas. Edite ou despublique/remova esses itens e envie imagens autorizadas antes de aceitar encomendas reais. O seed pode ser executado mais de uma vez sem duplicar os dados de exemplo.
