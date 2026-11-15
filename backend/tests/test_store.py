@@ -25,6 +25,14 @@ def test_neon_unpooled_database_url_uses_psycopg_driver():
     assert configured.database_url == "postgresql+psycopg://user:password@db.example.test/store?sslmode=require"
 
 
+def test_vercel_uploads_use_writable_tmp_directory(monkeypatch):
+    monkeypatch.setenv("VERCEL", "1")
+
+    configured = Settings(_env_file=None)
+
+    assert configured.upload_dir == "/tmp/agape-uploads"
+
+
 def add_product(client):
     with client.app.state.test_session_factory() as db:
         category = Category(name="Bolos", slug="bolos", description="")

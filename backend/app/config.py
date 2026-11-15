@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from pydantic import AliasChoices, Field, field_validator
@@ -21,7 +22,9 @@ class Settings(BaseSettings):
     business_email: str = "agapeconfeitaria06@gmail.com"
     instagram_url: str = "https://www.instagram.com/confeitaria_agape_artesanal_/"
     minimum_order_notice_hours: int = 48
-    upload_dir: str = "./uploads"
+    upload_dir: str = Field(
+        default_factory=lambda: "/tmp/agape-uploads" if os.environ.get("VERCEL") == "1" else "./uploads"
+    )
     app_env: str = "development"
 
     @field_validator("database_url")
