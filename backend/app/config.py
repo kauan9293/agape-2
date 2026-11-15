@@ -1,12 +1,16 @@
 from pathlib import Path
 
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    database_url: str = f"sqlite:///{(Path(__file__).resolve().parent.parent / 'agape.db').as_posix()}"
+    database_url: str = Field(
+        default=f"sqlite:///{(Path(__file__).resolve().parent.parent / 'agape.db').as_posix()}",
+        validation_alias=AliasChoices("AGAPE_DATABASE_URL_UNPOOLED", "DATABASE_URL"),
+    )
     secret_key: str = "development-only-change-before-deploying"
     session_cookie_name: str = "agape_session"
     cookie_secure: bool = False
@@ -19,6 +23,15 @@ class Settings(BaseSettings):
     minimum_order_notice_hours: int = 48
     upload_dir: str = "./uploads"
     app_env: str = "development"
+
+    @field_validator("database_url")
+    @classmethod
+    def use_psycopg_driver(cls, value: str) -> str:
+        if value.startswith("postgres://"):
+            return value.replace("postgres://", "postgresql+psycopg://", 1)
+        if value.startswith("postgresql://"):
+            return value.replace("postgresql://", "postgresql+psycopg://", 1)
+        return value
 
     @property
     def allowed_origins(self) -> list[str]:

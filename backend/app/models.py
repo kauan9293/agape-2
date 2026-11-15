@@ -61,6 +61,7 @@ class Product(Base):
     is_published: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     is_featured: Mapped[bool] = mapped_column(Boolean, default=False)
     is_demo: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_quote_only: Mapped[bool] = mapped_column(Boolean, default=False)
     stock: Mapped[int | None] = mapped_column(Integer, nullable=True)
     archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

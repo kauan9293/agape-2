@@ -38,8 +38,9 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   return response.json() as Promise<T>
 }
 
-export const money = (amount: string | number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(amount))
+export const money = (amount: string | number) => amount === 'Sob consulta'
+  ? amount
+  : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(amount))
 
 export const dateTime = (value: string) => {
   const normalized = /(?:Z|[+-]\d{2}:\d{2})$/.test(value) ? value : `${value}Z`

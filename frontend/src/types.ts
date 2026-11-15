@@ -13,6 +13,7 @@ export type Product = {
   is_published: boolean
   is_featured: boolean
   is_demo: boolean
+  is_quote_only: boolean
   stock: number | null
   images: ProductImage[]
   variants: Variant[]

@@ -58,11 +58,15 @@ Com `ADMIN_SETUP_TOKEN` configurado e sem executar `create-admin`, abra `/admin`
 
 O `vercel.json` declara os serviços `backend` (FastAPI) e `frontend` (Vite) no mesmo projeto. As rotas `/api/*` e `/media/*` vão para o backend; as demais rotas vão para o frontend, incluindo o painel `/admin`.
 
-Mantenha o Root Directory do projeto na raiz do repositório e configure no ambiente do backend `DATABASE_URL`, `SECRET_KEY`, `ADMIN_SETUP_TOKEN`, `COOKIE_SECURE=true`, `APP_ENV=production` e `CORS_ORIGINS` com as origens reais da loja. Use PostgreSQL externo e armazenamento persistente de objetos para imagens: o sistema de arquivos das funções Vercel não é armazenamento durável. Não publique segredos no repositório.
+Mantenha o Root Directory do projeto na raiz e configure no ambiente do backend `DATABASE_URL`, `SECRET_KEY`, `ADMIN_SETUP_TOKEN`, `COOKIE_SECURE=true`, `APP_ENV=production` e `CORS_ORIGINS` com as origens reais da loja. Com a integração Neon da Vercel, a aplicação também aceita `AGAPE_DATABASE_URL_UNPOOLED` e seleciona o driver Psycopg instalado. Use PostgreSQL externo e armazenamento persistente de objetos para imagens: o sistema de arquivos das funções Vercel não é armazenamento durável. Não publique segredos no repositório.
 
 ## Demonstração
 
 `python -m app.cli seed-demo` insere três categorias e três produtos com **nomes, descrições e preços fictícios**, marcados como demonstração no banco e na loja. As imagens são referências ilustrativas remotas. Edite ou despublique/remova esses itens e envie imagens autorizadas antes de aceitar encomendas reais. O seed pode ser executado mais de uma vez sem duplicar os dados de exemplo.
+
+## Catálogo de Natal
+
+As fotos ficam em `frontend/public/catalog` e são servidas em `/catalog`. Depois de aplicar as migrações, `python -m app.cli seed-christmas-catalog` cadastra os produtos de Natal no banco definido por `DATABASE_URL`; produtos com slug existente são preservados, exceto pelas descrições dos cards nas posições 5, 11 e 13 do catálogo, que são atualizadas conforme o mapeamento solicitado. Para cadastrar em produção, execute o comando com a URL do banco de produção configurada no ambiente local seguro. O cento de brigadeiros fica como orçamento pelo WhatsApp, sem preço fixo e sem opção de checkout.
 
 ## Banco e pedidos
 

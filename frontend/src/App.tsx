@@ -15,6 +15,14 @@ function photo(product?: Product, index = 0) {
   return product?.images[0]?.url ?? fallbackPhotos[index % fallbackPhotos.length]
 }
 
+function productPriceLabel(product: Product) {
+  if (product.is_quote_only) return 'Sob consulta'
+  const prices = [Number(product.price), ...product.variants.map((variant) => Number(product.price) + Number(variant.price_delta))]
+  const minimum = Math.min(...prices)
+  const maximum = Math.max(...prices)
+  return minimum === maximum ? money(minimum) : `${money(minimum)} a ${money(maximum)}`
+}
+
 function App() {
   const [cart, setCart] = useState<CartLine[]>(() => {
     try { return JSON.parse(localStorage.getItem('agape-cart') ?? '[]') as CartLine[] } catch { return [] }
@@ -65,7 +73,7 @@ function SiteFooter() {
 
 function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   const available = product.is_available && (product.stock === null || product.stock > 0) && (!product.variants.length || product.variants.some((variant) => variant.is_available && (variant.stock === null || variant.stock > 0)))
-  return <article className="product-card"><Link className="product-image" to={`/produto/${product.slug}`}><img src={photo(product, index)} alt={product.images[0]?.alt_text || product.name} loading="lazy" />{!available && <span className="image-badge">Indisponível</span>}{product.is_demo && <span className="image-badge demo-badge">Demonstração</span>}<span className="image-arrow"><ArrowDownRight size={19} /></span></Link><div className="product-info"><div><p className="product-category">{product.category.name}</p><Link to={`/produto/${product.slug}`} className="product-name">{product.name}</Link></div><span className="product-price">{money(product.price)}</span></div></article>
+  return <article className="product-card"><Link className="product-image" to={`/produto/${product.slug}`}><img src={photo(product, index)} alt={product.images[0]?.alt_text || product.name} loading="lazy" />{!available && <span className="image-badge">Indisponível</span>}{product.is_demo && <span className="image-badge demo-badge">Demonstração</span>}<span className="image-arrow"><ArrowDownRight size={19} /></span></Link><div className="product-info"><div><p className="product-category">{product.category.name}</p><Link to={`/produto/${product.slug}`} className="product-name">{product.name}</Link></div><span className="product-price">{productPriceLabel(product)}</span></div></article>
 }
 
 function HomePage() {
@@ -118,7 +126,17 @@ function ProductPage({ addToCart }: { addToCart: (product: Product, quantity: nu
   const unavailable = !product.is_available || (product.stock !== null && product.stock < 1) || (product.variants.length > 0 && !product.variants.some((variant) => variant.is_available && (variant.stock === null || variant.stock > 0)))
   const price = Number(product.price) + Number(selected?.price_delta ?? 0)
   const selectedImage = product.images.find((image) => image.url === activeImage)
+  if (product.is_quote_only) return <QuoteProductPage product={product} />
   return <main className="product-detail section-wrap"><Link className="back-link" to="/produtos"><ArrowLeft size={16} /> Voltar ao cardápio</Link><div className="detail-layout"><div className="detail-photo"><img src={activeImage ?? photo(product)} alt={selectedImage?.alt_text || product.images[0]?.alt_text || product.name} />{product.images.length > 1 && <div className="detail-thumbs" aria-label="Galeria de imagens">{product.images.map((image) => <button className={activeImage === image.url || (!activeImage && image.url === product.images[0].url) ? 'active' : ''} key={image.id} onClick={() => setActiveImage(image.url)} aria-label={`Ver imagem de ${image.alt_text || product.name}`} aria-pressed={activeImage === image.url || (!activeImage && image.url === product.images[0].url)}><img src={image.url} alt="" /></button>)}</div>}</div><div className="detail-copy"><p className="eyebrow">{product.category.name}</p><h1>{product.name}</h1><p className="detail-description">{product.description}</p><p className="detail-price">{money(price)}</p>{product.variants.length > 0 && <label className="form-field"><span>Escolha uma opção</span><span className="select-wrap"><select value={variantId ?? ''} onChange={(event) => setVariantId(event.target.value ? Number(event.target.value) : undefined)}><option value="">Selecione</option>{product.variants.map((variant) => <option disabled={!variant.is_available || variant.stock === 0} key={variant.id} value={variant.id}>{variant.name}{Number(variant.price_delta) > 0 ? ` · +${money(variant.price_delta)}` : ''}{!variant.is_available || variant.stock === 0 ? ' · indisponível' : ''}</option>)}</select><ChevronDown size={16} /></span></label>}<div className="quantity-row"><span>Quantidade</span><div className="quantity-control"><button aria-label="Diminuir quantidade" onClick={() => setQuantity(Math.max(1, quantity - 1))}><Minus size={15} /></button><span>{quantity}</span><button aria-label="Aumentar quantidade" onClick={() => setQuantity(Math.min(50, quantity + 1))}><Plus size={15} /></button></div></div><button disabled={unavailable || (product.variants.length > 0 && (!selected?.is_available || selected.stock === 0))} className="button button-dark add-button" onClick={() => { addToCart(product, quantity, variantId); setAdded(true); window.setTimeout(() => setAdded(false), 2200) }}>{added ? <><Check size={17} /> Adicionado à sacola</> : <><ShoppingBag size={17} /> {unavailable ? 'Indisponível' : 'Adicionar à sacola'}</>}</button><div className="detail-note"><span className="note-line" /><p>Produzido sob encomenda. Consulte a disponibilidade e o prazo mínimo pelo canal de contato antes de concluir.</p></div></div></div></main>
+}
+
+function QuoteProductPage({ product }: { product: Product }) {
+  const [businessWhatsapp, setBusinessWhatsapp] = useState('')
+  useEffect(() => { api<{ business_whatsapp: string }>('/api/storefront-config').then((config) => setBusinessWhatsapp(config.business_whatsapp)).catch(() => undefined) }, [])
+  const phone = businessWhatsapp.replace(/\D/g, '')
+  const message = encodeURIComponent(`Olá! Gostaria de solicitar um orçamento para ${product.name}.`)
+  const quoteUrl = phone ? `https://wa.me/${phone}?text=${message}` : ''
+  return <main className="product-detail section-wrap"><Link className="back-link" to="/produtos"><ArrowLeft size={16} /> Voltar ao cardápio</Link><div className="detail-layout"><div className="detail-photo"><img src={photo(product)} alt={product.images[0]?.alt_text || product.name} /></div><div className="detail-copy"><p className="eyebrow">{product.category.name}</p><h1>{product.name}</h1><p className="detail-description">{product.description}</p><p className="detail-price">Sob consulta</p>{quoteUrl ? <a className="button button-dark" href={quoteUrl} target="_blank" rel="noreferrer">Solicitar orçamento pelo WhatsApp <ArrowRight size={16} /></a> : <p className="notice">WhatsApp indisponível no momento.</p>}</div></div></main>
 }
 
 function CartPage({ cart, updateQuantity, clearCart }: { cart: CartLine[]; updateQuantity: (id: number, variantId: number | undefined, quantity: number) => void; clearCart: () => void }) {
@@ -201,7 +219,7 @@ function AdminLogin({ onLogin }: { onLogin: (user: { email: string }) => void })
 }
 
 type DashboardStats = { products: number; available_products: number; unavailable_products: number; orders: number; pending_orders: number; paid_sales: string }
-type ProductPayload = { category_id: number; name: string; slug: string; description: string; price: string; is_available: boolean; is_published: boolean; is_featured: boolean; is_demo: boolean; stock: number | null; images: { url: string; alt_text: string }[]; variants: { name: string; price_delta: string; stock: number | null; is_available: boolean }[] }
+type ProductPayload = { category_id: number; name: string; slug: string; description: string; price: string; is_available: boolean; is_published: boolean; is_featured: boolean; is_demo: boolean; is_quote_only: boolean; stock: number | null; images: { url: string; alt_text: string }[]; variants: { name: string; price_delta: string; stock: number | null; is_available: boolean }[] }
 
 function AdminDashboard({ user, onLogout }: { user: { email: string }; onLogout: () => void }) {
   const [section, setSection] = useState<'products' | 'orders'>('products')
@@ -223,7 +241,8 @@ function AdminDashboard({ user, onLogout }: { user: { email: string }; onLogout:
   async function saveProduct(payload: ProductPayload, product: Product | 'new') {
     setBusy(true); setError(''); setMessage('')
     try {
-      await api(product === 'new' ? '/api/admin/products' : `/api/admin/products/${product.id}`, { method: product === 'new' ? 'POST' : 'PUT', body: JSON.stringify(payload) })
+      const requestPayload = { ...payload, is_quote_only: product === 'new' ? payload.is_quote_only : product.is_quote_only }
+      await api(product === 'new' ? '/api/admin/products' : `/api/admin/products/${product.id}`, { method: product === 'new' ? 'POST' : 'PUT', body: JSON.stringify(requestPayload) })
       setEditor(null); setMessage('Produto salvo com sucesso.'); await refresh()
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Não foi possível salvar o produto.') }
     finally { setBusy(false) }
@@ -248,7 +267,7 @@ function ProductEditor({ product, categories, busy, onClose, onSave }: { product
   const [name, setName] = useState(product === 'new' ? '' : product.name)
   const [slug, setSlug] = useState(product === 'new' ? '' : product.slug)
   const [description, setDescription] = useState(product === 'new' ? '' : product.description)
-  const [price, setPrice] = useState(product === 'new' ? '' : product.price)
+  const [price, setPrice] = useState(product === 'new' ? '' : product.is_quote_only ? '0' : product.price)
   const [categoryId, setCategoryId] = useState(product === 'new' ? (categories[0]?.id ?? 0) : product.category_id)
   const [available, setAvailable] = useState(product === 'new' || product.is_available)
   const [published, setPublished] = useState(product !== 'new' && product.is_published)
@@ -272,7 +291,7 @@ function ProductEditor({ product, categories, busy, onClose, onSave }: { product
     event.preventDefault()
     const imageItems = imageUrls.split('\n').map((url) => url.trim()).filter(Boolean).map((url) => ({ url, alt_text: name }))
     const variantItems = variants.split('\n').map((line) => line.split('|')).filter((parts) => parts[0]?.trim()).map(([variantName, delta = '0', quantity = '']) => ({ name: variantName.trim(), price_delta: delta.trim() || '0', stock: quantity.trim() ? Number(quantity) : null, is_available: true }))
-    onSave({ category_id: Number(categoryId), name, slug, description, price, is_available: available, is_published: published, is_featured: featured, is_demo: demo, stock: stock === '' ? null : Number(stock), images: imageItems, variants: variantItems })
+    onSave({ category_id: Number(categoryId), name, slug, description, price, is_available: available, is_published: published, is_featured: featured, is_demo: demo, is_quote_only: false, stock: stock === '' ? null : Number(stock), images: imageItems, variants: variantItems })
   }
   return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}><section className="product-editor" role="dialog" aria-modal="true" aria-labelledby="editor-title"><header><div><p className="eyebrow">Catálogo</p><h2 id="editor-title">{product === 'new' ? 'Novo produto' : 'Editar produto'}</h2></div><button className="icon-button" onClick={onClose} aria-label="Fechar"><X size={19} /></button></header><form onSubmit={submit}><div className="editor-fields"><label className="form-field"><span>Nome</span><input required minLength={2} maxLength={180} value={name} onChange={(event) => setProductName(event.target.value)} /></label><label className="form-field"><span>Endereço do produto</span><input required pattern="[a-z0-9]+(-[a-z0-9]+)*" value={slug} onChange={(event) => setSlug(event.target.value)} /></label><label className="form-field"><span>Categoria</span><select required value={categoryId} onChange={(event) => setCategoryId(Number(event.target.value))}>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label><label className="form-field"><span>Preço (R$)</span><input required type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} /></label><label className="form-field editor-wide"><span>Descrição</span><textarea required minLength={2} maxLength={5000} rows={4} value={description} onChange={(event) => setDescription(event.target.value)} /></label><label className="form-field"><span>Estoque <small>vazio = sem limite definido</small></span><input type="number" min="0" step="1" value={stock} onChange={(event) => setStock(event.target.value)} /></label><label className="form-field editor-wide"><span>Imagens</span><textarea rows={2} value={imageUrls} onChange={(event) => setImageUrls(event.target.value)} placeholder="Uma URL por linha" /><span className="upload-control"><label><Upload size={15} /> {uploading ? 'Enviando...' : 'Enviar imagem'}<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void upload(event.target.files?.[0])} /></label><small>JPG, PNG ou WebP · até 8 MB</small></span>{uploadError && <small className="danger-text">{uploadError}</small>}</label><label className="form-field editor-wide"><span>Variações <small>uma por linha: nome | adicional em R$ | estoque</small></span><textarea rows={3} value={variants} onChange={(event) => setVariants(event.target.value)} placeholder={'Pequeno | 0 | 5\nGrande | 12.00 | 3'} /></label></div><div className="toggle-row"><label><input type="checkbox" checked={available} onChange={(event) => setAvailable(event.target.checked)} /> Disponível</label><label><input type="checkbox" checked={published} onChange={(event) => setPublished(event.target.checked)} /> Publicar</label><label><input type="checkbox" checked={featured} onChange={(event) => setFeatured(event.target.checked)} /> Destaque</label><label><input type="checkbox" checked={demo} onChange={(event) => setDemo(event.target.checked)} /> Dados de demonstração</label></div><footer><button type="button" className="button button-outline" onClick={onClose}>Cancelar</button><button type="button" className="button button-outline" onClick={() => setPreviewing(true)}>Pré-visualizar</button><button className="button button-dark" disabled={busy || uploading}>{busy ? 'Salvando...' : 'Salvar produto'} <Check size={16} /></button></footer></form></section>{previewing && <div className="preview-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPreviewing(false) }}><section className="preview-panel" role="dialog" aria-modal="true" aria-label="Prévia do produto"><button className="icon-button preview-close" onClick={() => setPreviewing(false)} aria-label="Fechar prévia"><X size={18} /></button><img src={imageUrls.split('\n').map((url) => url.trim()).find(Boolean) || fallbackPhotos[0]} alt={name || 'Prévia do produto'} /><div><p className="product-category">{categories.find((category) => category.id === Number(categoryId))?.name || 'Categoria'}</p><h2>{name || 'Nome do produto'}</h2><p>{description || 'A descrição do produto aparecerá aqui.'}</p><strong>{price ? money(price) : 'Preço'}</strong></div></section></div>}</div>
 }

@@ -76,6 +76,8 @@ def create_order(payload: OrderInput, db: Session = Depends(get_db)) -> Checkout
         product = db.scalar(select(Product).where(Product.id == line.product_id, Product.is_published.is_(True), Product.archived_at.is_(None)).with_for_update())
         if product is None or not product.is_available or (product.stock is not None and product.stock < product_quantities[line.product_id]):
             raise HTTPException(status_code=409, detail="Um produto não está disponível na quantidade solicitada.")
+        if product.is_quote_only:
+            raise HTTPException(status_code=422, detail="Este produto precisa ser orçado pelo WhatsApp e não aceita pedido pelo carrinho.")
         variant = None
         if product.variants and line.variant_id is None:
             raise HTTPException(status_code=422, detail="Selecione uma variação para cada produto que oferece opções.")

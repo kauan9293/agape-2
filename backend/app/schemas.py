@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_serializer
 
 
 class ORMModel(BaseModel):
@@ -57,6 +57,7 @@ class ProductInput(BaseModel):
     is_published: bool = False
     is_featured: bool = False
     is_demo: bool = False
+    is_quote_only: bool = False
     stock: int | None = Field(default=None, ge=0)
     images: list[ImageInput] = Field(default_factory=list, max_length=8)
     variants: list[VariantInput] = Field(default_factory=list, max_length=30)
@@ -69,14 +70,19 @@ class ProductOut(ORMModel):
     name: str
     slug: str
     description: str
-    price: Decimal
+    price: Decimal | str
     is_available: bool
     is_published: bool
     is_featured: bool
     is_demo: bool
+    is_quote_only: bool
     stock: int | None
     images: list[ImageOut]
     variants: list[VariantOut]
+
+    @field_serializer("price")
+    def serialize_price(self, price: Decimal) -> Decimal | str:
+        return "Sob consulta" if self.is_quote_only else price
 
 
 class LoginInput(BaseModel):
